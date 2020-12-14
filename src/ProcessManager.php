@@ -49,7 +49,7 @@ class ProcessManager{
     public function instanceProcess(){
         $process = new Process();
         $this->update($process->getId(),$process);
-        return true;
+        return $process;
     }
 
     public function collect(string $id){
@@ -68,9 +68,12 @@ class ProcessManager{
 
     public function update(string $id,Process $process){
         $string = $this->serializer->serialize($process, 'json');
+        var_dump($string);
         return $this->cache->get($id, function (ItemInterface $item) use($string) {
+            //var_dump($string);
             $item->expiresAfter(3600);
             $value = $string;
+            $item->set($value);
             return $value;
         });
     }
@@ -81,7 +84,7 @@ class ProcessManager{
         echo $data;
     }
 
-    public function handle(ProcessRequest $request = null){
+    public function handle(ProcessRequest $request = null,bool $release = true){
         if(!$request){
             $request = ProcessRequest::createFromGlobals();
         }
@@ -114,7 +117,7 @@ class ProcessManager{
             default:
                 break;
         }
-        $this->release($result);
+        $release && $this->release($result);
         return $result;
     }
 

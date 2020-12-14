@@ -14,7 +14,8 @@
         "symfony/cache": "^5.2",
         "symfony/http-foundation": "^5.2",
         "symfony/serializer": "9999999-dev",
-        "symfony/property-access": "9999999-dev"
+        "symfony/property-access": "9999999-dev",
+        "laminas/laminas-cache": "9999999-dev"
     },
     "autoload": {
         "psr-4": { 

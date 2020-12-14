@@ -28,7 +28,7 @@ class ProcessRequest extends Request{
         parent::__construct($query, $request, $attributes, $cookies, $files, $server, $content);
         $query = $this->query;
         $query = $this->request;
-        if(!isset($query->get(self::PROCESS_FORWARD_AWARE)))){
+        if($query->get(self::PROCESS_FORWARD_AWARE) != true){
             throw new BadRequestException();
         }
         $this->action = $query->get("action");
@@ -36,7 +36,9 @@ class ProcessRequest extends Request{
             case ProcessActionConst::GET:
                 break;
             case ProcessActionConst::COLLECT:
-                
+                return;
+                break;
+            case ProcessActionConst::INSTANCE:
                 return;
                 break;
             case ProcessActionConst::KILL:
