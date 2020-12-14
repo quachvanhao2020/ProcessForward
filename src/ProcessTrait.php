@@ -8,6 +8,10 @@ trait ProcessTrait{
     protected $id;
 
     /**
+     * @var string
+     */
+    protected $owned;
+    /**
      * @var bool
      */
     protected $isRun;
@@ -144,6 +148,31 @@ trait ProcessTrait{
     public function setError(array $error)
     {
         $this->error = $error;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of owned
+     *
+     * @return  string
+     */ 
+    public function getOwned()
+    {
+        if(!$this->owned) $this->owned = "ghost";
+        return $this->owned;
+    }
+
+    /**
+     * Set the value of owned
+     *
+     * @param  string  $owned
+     *
+     * @return  self
+     */ 
+    public function setOwned(string $owned)
+    {
+        $this->owned = $owned;
 
         return $this;
     }

@@ -45,7 +45,10 @@ class ProcessRequest extends Request{
                 break;
             case ProcessActionConst::HANDLE:
                 break;
+            case ProcessActionConst::RELEASE:
+                break;
             case ProcessActionConst::UPDATE:
+                $this->setIsRun(true);
                 $this->setParameter($this->decodeStringValue($query->get("parameter")));
                 $this->setResult($this->decodeStringValue($query->get("result")));
                 $this->setError($this->decodeStringValue($query->get("error"))); 

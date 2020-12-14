@@ -2,7 +2,7 @@
 namespace ProcessForward;
 use Symfony\Component\Uid\Uuid;
 
-class Process{
+class Process implements ProcessConstInterface{
     use ProcessTrait;
     public function __construct(string $id = null)
     {

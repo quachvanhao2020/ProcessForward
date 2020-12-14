@@ -7,5 +7,6 @@ class ProcessActionConst{
     const COLLECT = "collect";
     const KILL = "kill";
     const HANDLE = "handle";
+    const RELEASE = "release";
     const UPDATE = "update";
 }

@@ -10,11 +10,14 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Laminas\Cache\Storage\Adapter\Filesystem;
+use Laminas\Cache\Storage\StorageInterface;
 
 class ProcessManager{
+    const PROCESS_MAP = "process_map";
 
     /**
-     * @var CacheInterface
+     * @var StorageInterface
      */
     protected $cache;
         /**
@@ -22,23 +25,48 @@ class ProcessManager{
      */
     private $serializer;
 
-    public function __construct(CacheInterface $cache = null)
+    public function __construct(StorageInterface $cache = null)
     {
         if(!$cache){
-            $cache = $cache = new FilesystemAdapter("",0,__DIR__."/../");
+            $cache = new Filesystem([
+                "key_pattern" => "",
+                "cache_dir" => __DIR__."/../data/",
+                "dir_level"=>0,
+                "suffix"=>"json",
+                "namespace_separator"=>"",
+                "tag_suffix"=>"",
+                "namespace"=>"",
+                "ttl"=>0,
+            ]);
         }
         $this->cache = $cache;
         $this->serializer = $this->getSerializer();
+    }
+
+        /**
+     * @return Process
+     */
+    public function getProcessMap(){
+        $string = $this->cache->getItem(self::PROCESS_MAP);
+        if(!$string){
+            $string = "[]";
+            $this->cache->setItem(self::PROCESS_MAP,$string);
+        }
+        $result = \json_decode($string,true);
+        return $result;
+    }
+
+    public function updateProcessMap(string $id,array $value){
+        $map = $this->getProcessMap();
+        $map[$id] = $value;
+        return $this->cache->setItem(self::PROCESS_MAP,\json_encode($map,JSON_PRETTY_PRINT));
     }
 
     /**
      * @return Process
      */
     public function get(string $id){
-        $string = $this->cache->get($id, function (ItemInterface $item) {
-            $item->expiresAfter(3600);
-            return null;
-        });
+        $string = $this->cache->getItem($id);
         $process = $this->serializer->deserialize($string, Process::class, 'json');
         return $process;
     }
@@ -52,12 +80,18 @@ class ProcessManager{
         return $process;
     }
 
-    public function collect(string $id){
+    public function collect(){
+        return $this->getProcessMap();
+    }
 
+    public function releaseProcess(string $id){
+        $process = $this->get($id);
+        $process->setIsRun(false);
+        return $this->update($id,$process);
     }
 
     public function kill(string $id){
-        $this->cache->delete($id);
+        $this->cache->removeItem($id);
     }
 
     public function handleProcess(string $id){
@@ -68,14 +102,11 @@ class ProcessManager{
 
     public function update(string $id,Process $process){
         $string = $this->serializer->serialize($process, 'json');
-        var_dump($string);
-        return $this->cache->get($id, function (ItemInterface $item) use($string) {
-            //var_dump($string);
-            $item->expiresAfter(3600);
-            $value = $string;
-            $item->set($value);
-            return $value;
-        });
+        $this->updateProcessMap($id,[
+            Process::IS_RUN => $process->getIsRun(),
+            Process::OWNED => $process->getOwned(),
+        ]);
+        return $this->cache->setItem($id,$string);
     }
 
     public function release($data = null){
@@ -84,6 +115,9 @@ class ProcessManager{
         echo $data;
     }
 
+    /**
+     * @return Process
+     */
     public function handle(ProcessRequest $request = null,bool $release = true){
         if(!$request){
             $request = ProcessRequest::createFromGlobals();
@@ -99,7 +133,7 @@ class ProcessManager{
                 $result = $this->instanceProcess();
                 break;
             case ProcessActionConst::COLLECT:
-                $result = $this->collect($id);
+                $result = $this->collect();
                 break;
             case ProcessActionConst::KILL:
                 $result = $this->kill($id);
@@ -107,8 +141,12 @@ class ProcessManager{
             case ProcessActionConst::HANDLE:
                 $result = $this->handleProcess($id);
                 break;
+            case ProcessActionConst::RELEASE:
+                $result = $this->releaseProcess($id);
+                break;
             case ProcessActionConst::UPDATE:
                 $process = new Process($id);
+                $process->setIsRun(true);
                 $process->setParameter($request->getParameter());
                 $process->setResult($request->getResult());
                 $process->setError($request->getError());
@@ -124,7 +162,7 @@ class ProcessManager{
     /**
      * Get the value of cache
      *
-     * @return  CacheInterface
+     * @return  StorageInterface
      */ 
     public function getCache()
     {
@@ -134,11 +172,11 @@ class ProcessManager{
     /**
      * Set the value of cache
      *
-     * @param  CacheInterface  $cache
+     * @param  StorageInterface  $cache
      *
      * @return  self
      */ 
-    public function setCache(CacheInterface $cache)
+    public function setCache(StorageInterface $cache)
     {
         $this->cache = $cache;
 
