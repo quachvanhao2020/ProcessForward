@@ -15,4 +15,14 @@ class Process implements ProcessConstInterface{
         $this->result = [];
         $this->error = [];
     }
+
+    public function __toArray(){
+        return [
+            self::ID => $this->getId(),
+            self::IS_RUN => $this->getIsRun(),
+            self::OWNED => $this->getOwned(),
+            self::PARAMETER => $this->getParameter(),
+            self::RESULT => $this->getResult(),
+        ];
+    }
 }
