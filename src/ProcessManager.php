@@ -74,14 +74,21 @@ class ProcessManager{
     /**
      * @return bool
      */
-    public function instanceProcess(){
-        $process = new Process();
+    public function instanceProcess(string $owner,string $id = null){
+        $process = new Process($id);
+        $process->setOwned($owner);
         $this->update($process->getId(),$process);
         return $process;
     }
 
-    public function collect(){
-        return $this->getProcessMap();
+    public function collect(string $owner_like){
+        $map = $this->getProcessMap();
+        foreach ($map as $key => $value) {
+            if(strpos(@$value[Process::OWNED],$owner_like) === false){
+                unset($map[$key]);
+            }
+        }
+        return $map;
     }
 
     public function releaseProcess(string $id){
@@ -105,6 +112,7 @@ class ProcessManager{
         $this->updateProcessMap($id,[
             Process::IS_RUN => $process->getIsRun(),
             Process::OWNED => $process->getOwned(),
+            Process::TIME => $process->getTime(),
         ]);
         return $this->cache->setItem($id,$string);
     }
@@ -130,10 +138,10 @@ class ProcessManager{
                 $result = $this->get($id);
                 break;
             case ProcessActionConst::INSTANCE:
-                $result = $this->instanceProcess();
+                $result = $this->instanceProcess($request->getOwned(),$id);
                 break;
             case ProcessActionConst::COLLECT:
-                $result = $this->collect();
+                $result = $this->collect($request->getOwned());
                 break;
             case ProcessActionConst::KILL:
                 $result = $this->kill($id);
@@ -145,7 +153,7 @@ class ProcessManager{
                 $result = $this->releaseProcess($id);
                 break;
             case ProcessActionConst::UPDATE:
-                $process = new Process($id);
+                $process = $this->get($id);
                 $process->setIsRun(true);
                 $process->setParameter($request->getParameter());
                 $process->setResult($request->getResult());

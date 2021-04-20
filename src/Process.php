@@ -1,5 +1,7 @@
 <?php
 namespace ProcessForward;
+
+use DateTime;
 use Symfony\Component\Uid\Uuid;
 
 class Process implements ProcessConstInterface{
@@ -14,6 +16,8 @@ class Process implements ProcessConstInterface{
         $this->parameter = [];
         $this->result = [];
         $this->error = [];
+        $date = new DateTime();
+        $this->time = $date->getTimestamp();
     }
 
     public function __toArray(){
@@ -23,6 +27,7 @@ class Process implements ProcessConstInterface{
             self::OWNED => $this->getOwned(),
             self::PARAMETER => $this->getParameter(),
             self::RESULT => $this->getResult(),
+            self::TIME => $this->getTime(),
         ];
     }
 }

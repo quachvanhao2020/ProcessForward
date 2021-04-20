@@ -31,6 +31,11 @@ trait ProcessTrait{
      */
     protected $error;
 
+    /**
+     * @var int
+     */
+    protected $time;
+
         /**
      * Get the value of id
      *
@@ -173,6 +178,30 @@ trait ProcessTrait{
     public function setOwned(string $owned)
     {
         $this->owned = $owned;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of time
+     *
+     * @return  int
+     */ 
+    public function getTime()
+    {
+        return $this->time;
+    }
+
+    /**
+     * Set the value of time
+     *
+     * @param  int  $time
+     *
+     * @return  self
+     */ 
+    public function setTime(int $time)
+    {
+        $this->time = $time;
 
         return $this;
     }

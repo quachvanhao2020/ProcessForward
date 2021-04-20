@@ -36,10 +36,12 @@ class ProcessRequest extends Request{
             case ProcessActionConst::GET:
                 break;
             case ProcessActionConst::COLLECT:
+                $this->setOwned($query->get("owned"));
                 return;
                 break;
             case ProcessActionConst::INSTANCE:
-                return;
+                $this->setOwned($query->get("owned"));
+                //return;
                 break;
             case ProcessActionConst::KILL:
                 break;
@@ -59,7 +61,9 @@ class ProcessRequest extends Request{
         $this->setId($query->get("id"));
     }
 
-    public function decodeStringValue(string $data){
+    public function decodeStringValue($data){
+        if(!$data) return [];
+        if(is_array($data)) return $data;
         return \json_decode($data, true);
     }
 
