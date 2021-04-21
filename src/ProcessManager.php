@@ -56,8 +56,11 @@ class ProcessManager{
         return $result;
     }
 
-    public function updateProcessMap(string $id,array $value){
+    public function updateProcessMap(string $id,array $value = []){
         $map = $this->getProcessMap();
+        if(empty($value)){
+            unset($map[$id]);
+        }else
         $map[$id] = $value;
         return $this->cache->setItem(self::PROCESS_MAP,\json_encode($map,JSON_PRETTY_PRINT));
     }
@@ -99,6 +102,7 @@ class ProcessManager{
 
     public function kill(string $id){
         $this->cache->removeItem($id);
+        $this->updateProcessMap($id);
     }
 
     public function handleProcess(string $id){
